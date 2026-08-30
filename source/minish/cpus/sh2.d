@@ -487,11 +487,11 @@ __gshared const immutable(SHInst)[] SH2Inst = [
         cpu.MACL = cast(ushort)cpu.R[n] * cast(ushort)cpu.R[m];
         cpu.PC += 2;
     }),
-    OpN4M4!("NEG",       "neg Rm,Rn",                0b0000000000001011, (SHCPU cpu, int m, int n) {
+    OpN4M4!("NEG",       "neg Rm,Rn",                0b0110000000001011, (SHCPU cpu, int m, int n) {
         cpu.R[n] = 0 - cpu.R[m];
         cpu.PC += 2;
     }),
-    OpN4M4!("NEGC",      "negc Rm,Rn",               0b0000000000001010, (SHCPU cpu, int m, int n) {
+    OpN4M4!("NEGC",      "negc Rm,Rn",               0b0110000000001010, (SHCPU cpu, int m, int n) {
         uint tmp = 0 - cpu.R[m];
         cpu.R[n] = tmp - cpu.T;
         cpu.T = (0 < tmp) | (tmp < cpu.R[n]);
