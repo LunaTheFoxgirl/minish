@@ -42,8 +42,11 @@ interface ISink {
 */
 class StdoutSink : ISink {
 	void write(SHCPU cpu, string text) {
-		import std.stdio : writefln;
-		writefln("%.8x: %s", cpu.PC, text);
+		import std.stdio : writefln, writef;
+		if (cpu.isDelaySlotFilled)
+			writefln("%.8x: %s (delay slot)", cpu.execAddr, text);
+		else
+			writefln("%.8x: %s", cpu.execAddr, text);
 	}
 
 	void warning(SHCPU cpu, string text) {

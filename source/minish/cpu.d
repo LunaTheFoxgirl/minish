@@ -103,6 +103,11 @@ public:
 	@property void Q(ubyte value) => setbit!SH_Q_BIT(SR, value);
 
 	/**
+		Whether the delay slot is filled.
+	*/
+	@property bool isDelaySlotFilled() => delaySlot_ != 0;
+
+	/**
 		The address that will be executed in the next step cycle.
 	*/
 	@property uint execAddr() {
