@@ -103,6 +103,15 @@ public:
 	@property void Q(ubyte value) => setbit!SH_Q_BIT(SR, value);
 
 	/**
+		The address that will be executed in the next step cycle.
+	*/
+	@property uint execAddr() {
+		return 	delaySlot_ != 0 ? 
+				delaySlot_ : 
+				PC;
+	}
+
+	/**
 		Reads value at given address if possible.
 
 		Params:

@@ -10,6 +10,6 @@ void main(string[] args) {
 	cpu.disassemble(cpu.PC, sink);
 	while(cpu.step()) {
 		writeln(cpu.toString());
-		cpu.disassemble(cpu.PC, sink);
+		cpu.disassemble(cpu.execAddr, sink);
 	}
 }
