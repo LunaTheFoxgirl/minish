@@ -1,0 +1,7 @@
+name "minish"
+description "Small SuperH CPU emulator"
+authors "Luna"
+copyright "Copyright © 2026, Luna"
+license "BSD-2-Clause"
+
+targetPath "out/"
