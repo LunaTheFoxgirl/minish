@@ -1,5 +1,7 @@
 module minish.cpu;
 import minish.mem;
+import minish.inst;
+import minish.sink;
 
 public import minish.cpus;
 
@@ -168,6 +170,15 @@ public:
 	*/
 	abstract bool step();
 
+    /**
+        Disassembles the instruction at the given address.
+
+        Params:
+            addr = The address to disassemble.
+            sink = The sink to disassemble to.
+    */
+    abstract void disassemble(uint addr, ISink sink);
+
 	/**
 		Allows setting the status register.
 
@@ -183,10 +194,10 @@ public:
 	string toString() const {
 		import std.format : format;
 		return (
-			" r0=%0x  r1=%0x  r2=%0x  r3=%0x  r4=%0x  r5=%0x  r6=%0x  r7=%0x\n" ~
-			" r8=%0x  r9=%0x r10=%0x r11=%0x r12=%0x r13=%0x r14=%0x r15=%0x\n" ~
-			" pc=%0x  pr=%0x  sr=%0x gbr=%0x vbr=%0x dbr=%0x\n" ~
-			"mach=%0x macl=%0x\n"
+			"  r0=%.8x   r1=%.8x   r2=%.8x   r3=%.8x   r4=%.8x   r5=%.8x   r6=%.8x   r7=%.8x\n" ~
+			"  r8=%.8x   r9=%.8x  r10=%.8x  r11=%.8x  r12=%.8x  r13=%.8x  r14=%.8x  r15=%.8x\n" ~
+			"  pc=%.8x   pr=%.8x   sr=%.8x  gbr=%.8x  vbr=%.8x  dbr=%.8x\n" ~
+			"mach=%.8x macl=%.8x\n"
 		).format(
 			R[0],  R[1],  R[2],  R[3],  R[4],  R[5],  R[6],  R[7],
 			R[8],  R[9], R[10], R[11], R[12], R[13], R[14], R[15],

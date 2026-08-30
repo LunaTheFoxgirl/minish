@@ -3,11 +3,13 @@ import std.file;
 import minish;
 
 void main(string[] args) {
+	ISink sink = new StdoutSink();
 	SHCPU cpu = new SH2CPU(16777216);
-	cpu.loadELF(read(args[1]));
+	cpu.loadELF(read(args[1]), sink);
 
-	writeln(cpu.toString());
+	cpu.disassemble(cpu.PC, sink);
 	while(cpu.step()) {
 		writeln(cpu.toString());
+		cpu.disassemble(cpu.PC, sink);
 	}
 }

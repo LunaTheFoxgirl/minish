@@ -31,7 +31,7 @@ struct SHInst {
     /**
         Function to print the instruction and its operands.
     */
-    void delegate(ISink sink, ushort op) print;
+    void delegate(SHCPU cpu, ISink sink, ushort op) print;
 }
 
 template Op(string name, string asmstr, ushort opcode, void function(SHCPU cpu) op) {
@@ -44,8 +44,8 @@ template Op(string name, string asmstr, ushort opcode, void function(SHCPU cpu) 
         (SHCPU cpu, ushort opcode) {
             op(cpu);
         },
-        (ISink sink, ushort opcode) {
-            sink.write(asmstr);
+        (SHCPU cpu, ISink sink, ushort opcode) {
+            sink.write(cpu, asmstr);
         }
     );
     alias Op = __INSTR;
@@ -62,11 +62,11 @@ template OpM4(string name, string asmstr, ushort opcode, void function(SHCPU cpu
             int m = (opcode >> 8)&0x0F;
             op(cpu, m);
         },
-        (ISink sink, ushort opcode) {
+        (SHCPU cpu, ISink sink, ushort opcode) {
             import minish.sink : formatSH;
 
             int m = (opcode >> 8)&0x0F;
-            sink.write(asmstr.formatSH(SHOperands(
+            sink.write(cpu, asmstr.formatSH(SHOperands(
                 m: m, 
             )));
         }
@@ -85,11 +85,11 @@ template OpN4(string name, string asmstr, ushort opcode, void function(SHCPU cpu
             int n = (opcode >> 8)&0x0F;
             op(cpu, n);
         },
-        (ISink sink, ushort opcode) {
+        (SHCPU cpu, ISink sink, ushort opcode) {
             import minish.sink : formatSH;
 
             int n = (opcode >> 8)&0x0F;
-            sink.write(asmstr.formatSH(SHOperands(
+            sink.write(cpu, asmstr.formatSH(SHOperands(
                 n: n,
             )));
         }
@@ -109,12 +109,12 @@ template OpN4M4(string name, string asmstr, ushort opcode, void function(SHCPU c
             int m = (opcode >> 4)&0x0F;
             op(cpu, m, n);
         },
-        (ISink sink, ushort opcode) {
+        (SHCPU cpu, ISink sink, ushort opcode) {
             import minish.sink : formatSH;
 
             int n = (opcode >> 8)&0x0F;
             int m = (opcode >> 4)&0x0F;
-            sink.write(asmstr.formatSH(SHOperands(
+            sink.write(cpu, asmstr.formatSH(SHOperands(
                 n: n, 
                 m: m
             )));
@@ -135,12 +135,12 @@ template OpN4I8(string name, string asmstr, ushort opcode, void function(SHCPU c
             int i = (opcode & 0xFF);
             op(cpu, i, n);
         },
-        (ISink sink, ushort opcode) {
+        (SHCPU cpu, ISink sink, ushort opcode) {
             import minish.sink : formatSH;
 
             int i = (opcode & 0xFF);
             int n = (opcode >> 8)&0x0F;
-            sink.write(asmstr.formatSH(SHOperands(
+            sink.write(cpu, asmstr.formatSH(SHOperands(
                 imm: i, 
                 n: n
             )));
@@ -163,12 +163,12 @@ template OpN4D8(string name, string asmstr, ushort opcode, void function(SHCPU c
             int d = (opcode & 0xFF);
             op(cpu, d, n);
         },
-        (ISink sink, ushort opcode) {
+        (SHCPU cpu, ISink sink, ushort opcode) {
             import minish.sink : formatSH;
 
             int n = (opcode >> 8)&0x0F;
             int d = (opcode & 0xFF);
-            sink.write(asmstr.formatSH(SHOperands(
+            sink.write(cpu, asmstr.formatSH(SHOperands(
                 n: n,
                 disp: d, 
             )));
@@ -188,11 +188,11 @@ template OpI8(string name, string asmstr, ushort opcode, void function(SHCPU cpu
             int i = (opcode & 0xFF);
             op(cpu, i);
         },
-        (ISink sink, ushort opcode) {
+        (SHCPU cpu, ISink sink, ushort opcode) {
             import minish.sink : formatSH;
             
             int i = (opcode & 0xFF);
-            sink.write(asmstr.formatSH(SHOperands(
+            sink.write(cpu, asmstr.formatSH(SHOperands(
                 imm: i, 
             )));
         }
@@ -211,11 +211,11 @@ template OpD8(string name, string asmstr, ushort opcode, void function(SHCPU cpu
             int d = (opcode & 0xFF);
             op(cpu, d);
         },
-        (ISink sink, ushort opcode) {
+        (SHCPU cpu, ISink sink, ushort opcode) {
             import minish.sink : formatSH;
             
             int d = (opcode & 0xFF);
-            sink.write(asmstr.formatSH(SHOperands(
+            sink.write(cpu, asmstr.formatSH(SHOperands(
                 disp: d, 
             )));
         }
@@ -234,11 +234,11 @@ template OpD12(string name, string asmstr, ushort opcode, void function(SHCPU cp
             int d = (opcode & 0xFFF);
             op(cpu, d);
         },
-        (ISink sink, ushort opcode) {
+        (SHCPU cpu, ISink sink, ushort opcode) {
             import minish.sink : formatSH;
             
             int d = (opcode & 0xFFF);
-            sink.write(asmstr.formatSH(SHOperands(
+            sink.write(cpu, asmstr.formatSH(SHOperands(
                 disp: d, 
             )));
         }
@@ -258,12 +258,12 @@ template OpM4D4(string name, string asmstr, ushort opcode, void function(SHCPU c
             int d = (opcode & 0xF);
             op(cpu, m, d);
         },
-        (ISink sink, ushort opcode) {
+        (SHCPU cpu, ISink sink, ushort opcode) {
             import minish.sink : formatSH;
 
             int m = (opcode >> 4)&0xF;
             int d = (opcode & 0xF);
-            sink.write(asmstr.formatSH(SHOperands(
+            sink.write(cpu, asmstr.formatSH(SHOperands(
                 m: m,
                 disp: d, 
             )));
@@ -284,12 +284,12 @@ template OpN4D4(string name, string asmstr, ushort opcode, void function(SHCPU c
             int d = (opcode & 0xF);
             op(cpu, d, n);
         },
-        (ISink sink, ushort opcode) {
+        (SHCPU cpu, ISink sink, ushort opcode) {
             import minish.sink : formatSH;
 
             int n = (opcode >> 4)&0xF;
             int d = (opcode & 0xF);
-            sink.write(asmstr.formatSH(SHOperands(
+            sink.write(cpu, asmstr.formatSH(SHOperands(
                 n: n,
                 disp: d, 
             )));
@@ -311,13 +311,13 @@ template OpN4M4D4(string name, string asmstr, ushort opcode, void function(SHCPU
             int d = (opcode & 0xF);
             op(cpu, m, d, n);
         },
-        (ISink sink, ushort opcode) {
+        (SHCPU cpu, ISink sink, ushort opcode) {
             import minish.sink : formatSH;
 
             int n = (opcode >> 8)&0xF;
             int m = (opcode >> 4)&0xF;
             int d = (opcode & 0xF);
-            sink.write(asmstr.formatSH(SHOperands(
+            sink.write(cpu, asmstr.formatSH(SHOperands(
                 n: n,
                 m: m,
                 disp: d, 
@@ -331,6 +331,7 @@ template OpN4M4D4(string name, string asmstr, ushort opcode, void function(SHCPU
     Template that generates the instruction that selects an instruction to execute.
 */
 mixin template GenInstrSelect(SHInst[] inst) {
+    import minish.sink;
     
     /// The different opcode category masks that was found in the instruction set.
     enum OpcodeCategories = (SHInst[] inst) {
@@ -369,5 +370,29 @@ mixin template GenInstrSelect(SHInst[] inst) {
         }
 
         return false;
+    }
+
+    /**
+        Disassembles the instruction at the given address.
+
+        Params:
+            addr = The address to disassemble.
+            sink = The sink to disassemble to.
+    */
+    override void disassemble(uint addr, ISink sink) {
+        ushort op = this.read!ushort(addr);
+        static foreach(CATEGORY; OpcodeCategories) {
+            switch(op & CATEGORY) {
+                default: break;
+
+                static foreach(i; 0..inst.length) {{
+                    static if (inst[i].mask == CATEGORY) {
+                        case inst[i].opcode:
+                            inst[i].print(this, sink, op);
+                            return;
+                    }
+                }}
+            }
+        }
     }
 }

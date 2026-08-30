@@ -1,6 +1,8 @@
 module minish.elf;
 import minish.cpu;
+import minish.sink;
 import core.sys.elf;
+import std.format;
 
 /**
 	Gets whether the buffer contains an ELF file.
@@ -53,33 +55,41 @@ bool isLittleEndian(Elf32_Ehdr* hdr) {
 	Params:
 		cpu = 		The cpu to load the program into.
 		buffer = 	The buffer containing the ELF file.
+		sink =		Sink to write messages to.
 */
-void loadELF(ref SHCPU cpu, void[] buffer) {
-	Elf32_Ehdr* header = (cast(ubyte[])buffer).getProgramHeader();
-	if (!header)
-		throw new Exception("Not a 32-bit ELF file!");
+void loadELF(ref SHCPU cpu, void[] buffer, ISink sink = null) {
+	try {
+		Elf32_Ehdr* header = (cast(ubyte[])buffer).getProgramHeader();
+		if (!header)
+			throw new Exception("Not a 32-bit ELF file!");
 
-	if (header.e_machine != EM_SH)
-		throw new Exception("Not a SuperH ELF file!");
+		if (header.e_machine != EM_SH)
+			throw new Exception("Not a SuperH ELF file!");
 
-	// Load sections.
-	void* base = cast(void*)header;
-	foreach(pi; 0..header.e_phnum) {
-		Elf32_Phdr* phdr = cast(Elf32_Phdr*)(base+header.e_phoff+(header.e_phentsize*pi));
+		// Load sections.
+		void* base = cast(void*)header;
+		foreach(pi; 0..header.e_phnum) {
+			Elf32_Phdr* phdr = cast(Elf32_Phdr*)(base+header.e_phoff+(header.e_phentsize*pi));
 
-		switch(phdr.p_type) {
-			case PT_LOAD:
-				ubyte[] buf = (cast(ubyte*)(base+phdr.p_offset))[0..phdr.p_filesz];
-				if (!cpu.load(buf, phdr.p_vaddr)) {
-					assert(0, "Could not load ELF section into memory!");
-					return;
-				}
-				continue;
+			switch(phdr.p_type & PN_XNUM) {
+				case PT_LOAD:
+					ubyte[] buf = (cast(ubyte*)(base+phdr.p_offset))[0..phdr.p_filesz];
+					if (!cpu.load(buf, phdr.p_vaddr)) {
+						if (sink)
+							sink.warning(cpu, "Could not load section of size %x into virtual address %.8x, not enough space!".format(phdr.p_filesz, phdr.p_vaddr));
+					}
+					continue;
 
-			default:
-				continue;
+				default:
+					continue;
+			}
 		}
-	}
 
-	cpu.PC = header.e_entry;
+		cpu.PC = header.e_entry;
+	} catch(Exception ex) {
+		if (sink)
+			sink.error(cpu, ex.msg);
+		else 
+			throw ex;
+	}
 }
