@@ -380,6 +380,8 @@ mixin template GenInstrSelect(SHInst[] inst) {
             sink = The sink to disassemble to.
     */
     override void disassemble(uint addr, ISink sink) {
+        import std.format;
+
         ushort op = this.read!ushort(addr);
         static foreach(CATEGORY; OpcodeCategories) {
             switch(op & CATEGORY) {

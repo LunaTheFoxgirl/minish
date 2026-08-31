@@ -2,14 +2,21 @@ import std.stdio;
 import std.file;
 import minish;
 
-void main(string[] args) {
+int main(string[] args) {
 	ISink sink = new StdoutSink();
-	SHCPU cpu = new SH2CPU(16777216, false);
-	cpu.loadELF(read(args[1]), sink);
+	if (args.length != 3) {
+		writeln(args[0], " <sh,shl> <file>");
+		return -1;
+	}
+
+	SHCPU cpu = new SH2CPU(16777216, args[1] == "shl");
+	cpu.loadELF(read(args[2]), sink);
 
 	cpu.disassemble(cpu.PC, sink);
 	while(cpu.step()) {
 		writeln(cpu.toString());
 		cpu.disassemble(cpu.execAddr, sink);
 	}
+
+	return 0;
 }
