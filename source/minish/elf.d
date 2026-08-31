@@ -1,6 +1,7 @@
 module minish.elf;
 import minish.cpu;
 import minish.sink;
+import minish.endian;
 import core.sys.elf;
 import std.format;
 
@@ -11,10 +12,12 @@ import std.format;
 		buffer = The buffer to check.
 */
 bool isELF(ubyte[] buffer) {
-	return 	buffer[0] == ELFMAG0 &&
-			buffer[1] == ELFMAG1 &&
-			buffer[2] == ELFMAG2 &&
-			buffer[3] == ELFMAG3;
+	import std.bitmanip : swapEndian;
+	uint MAGIC = *cast(uint*)(&buffer[0]);
+	uint ELFMAGIC = cast(uint)ELFMAG;
+
+	return 	MAGIC == ELFMAGIC || 
+			swapEndian(MAGIC) == ELFMAGIC;
 }
 
 /**
@@ -63,20 +66,32 @@ void loadELF(ref SHCPU cpu, void[] buffer, ISink sink = null) {
 		if (!header)
 			throw new Exception("Not a 32-bit ELF file!");
 
-		if (header.e_machine != EM_SH)
+		if (isLittleEndian(header) != cpu.isLittleEndian)
+			throw new Exception("Endianess mismatch!");
+
+		bool el = isLittleEndian(header);
+		if (header.e_machine.toNativeEndian(el) != EM_SH)
 			throw new Exception("Not a SuperH ELF file!");
+
+		uint e_phoff = header.e_phoff.toNativeEndian(el);
+		uint e_phentsize = header.e_phentsize.toNativeEndian(el);
+		uint e_phnum = header.e_phnum.toNativeEndian(el);
 
 		// Load sections.
 		void* base = cast(void*)header;
-		foreach(pi; 0..header.e_phnum) {
-			Elf32_Phdr* phdr = cast(Elf32_Phdr*)(base+header.e_phoff+(header.e_phentsize*pi));
+		foreach(pi; 0..e_phnum) {
+			Elf32_Phdr* phdr = cast(Elf32_Phdr*)(base+e_phoff+(e_phentsize*pi));
+			uint p_filesz = phdr.p_filesz.toNativeEndian(el);
+			uint p_offset = phdr.p_offset.toNativeEndian(el);
+			uint p_vaddr = phdr.p_vaddr.toNativeEndian(el);
+			uint p_type = phdr.p_type.toNativeEndian(el);
 
-			switch(phdr.p_type & PN_XNUM) {
+			switch(p_type & PN_XNUM) {
 				case PT_LOAD:
-					ubyte[] buf = (cast(ubyte*)(base+phdr.p_offset))[0..phdr.p_filesz];
-					if (!cpu.load(buf, phdr.p_vaddr)) {
+					ubyte[] buf = (cast(ubyte*)(base+p_offset))[0..p_filesz];
+					if (!cpu.load(buf, p_vaddr)) {
 						if (sink)
-							sink.warning(cpu, "Could not load section of size %x into virtual address %.8x, not enough space!".format(phdr.p_filesz, phdr.p_vaddr));
+							sink.warning(cpu, "Could not load section of size %x into virtual address %.8x, not enough space!".format(p_filesz, p_vaddr));
 					}
 					continue;
 
@@ -85,7 +100,8 @@ void loadELF(ref SHCPU cpu, void[] buffer, ISink sink = null) {
 			}
 		}
 
-		cpu.PC = header.e_entry;
+		uint e_entry = header.e_entry.toNativeEndian(el);
+		cpu.PC = e_entry;
 	} catch(Exception ex) {
 		if (sink)
 			sink.error(cpu, ex.msg);

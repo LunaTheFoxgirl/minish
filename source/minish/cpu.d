@@ -2,6 +2,7 @@ module minish.cpu;
 import minish.mem;
 import minish.inst;
 import minish.sink;
+import minish.endian;
 
 public import minish.cpus;
 
@@ -20,6 +21,7 @@ enum SH_M_BIT = 9;
 abstract class SHCPU {
 private:
 	uint delaySlot_;
+	bool shle;
 
 protected:
 
@@ -44,7 +46,8 @@ protected:
 		Params:
 			mem = The memory controller to instantiate with.
 	*/
-	this(SHMemory mem) {
+	this(SHMemory mem, bool isLittleEndian) {
+		this.shle = isLittleEndian;
 		this.memory = mem;
 	}
 
@@ -103,6 +106,11 @@ public:
 	@property void Q(ubyte value) => setbit!SH_Q_BIT(SR, value);
 
 	/**
+		Whether the processor is little endian.
+	*/
+	@property bool isLittleEndian() => shle;
+
+	/**
 		Whether the delay slot is filled.
 	*/
 	@property bool isDelaySlotFilled() => delaySlot_ != 0;
@@ -127,7 +135,7 @@ public:
 	*/
 	T read(T)(uint addr) {
 		if (auto v = memory.getAddress!T(addr))
-			return *v;
+			return (*v).toNativeEndian(shle);
 		return T.init;
 	}
 
@@ -141,9 +149,9 @@ public:
 	void write(T, Y)(uint addr, Y value) {
 		if (auto v = memory.getAddress!T(addr)) {
 			static if (is(T == Y))
-				*v = value;
+				*v = value.toOtherEndian(shle);
 			else
-				*v = *cast(T*)&value;
+				*v = (*cast(T*)&value).toOtherEndian(shle);
 		}
 	}
 

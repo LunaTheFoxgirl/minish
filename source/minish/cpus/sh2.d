@@ -15,8 +15,8 @@ public:
         Params:
             memSize = The size of the main memory, in bytes.
     */
-    this(uint memSize) {
-        super(new SHMemory(memSize, false));
+    this(uint memSize, bool isLittleEndian) {
+        super(new SHMemory(memSize, false), isLittleEndian);
     }
 
     // Generate the instruction set.
