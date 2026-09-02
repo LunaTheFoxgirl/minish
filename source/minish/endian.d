@@ -35,7 +35,7 @@ T toNativeEndian(T)(T in_, bool isLittleEndian) {
 		The value with its endianness swapped.
 */
 T toOtherEndian(T)(T in_, bool isLittleEndian) {
-	version(LittleEndian) {
+	if (isLittleEndian) {
 
 		void[T.sizeof] tmp = cast(void[T.sizeof])nativeToLittleEndian(in_);
 		return (cast(T[])tmp)[0];

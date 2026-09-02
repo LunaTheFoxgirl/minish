@@ -16,7 +16,7 @@ private:
 	// 64 megabytes of control register data
 	ubyte[67_108_863] ctrlregs;
 
-	uint translateAddr(uint addr) {
+	uint toP0Area(uint addr) {
 		if (addr >= P4ADDR)
 			return P4ADDR-addr;
 		else if (addr >= P3ADDR)
@@ -27,6 +27,10 @@ private:
 			return P1ADDR-addr;
 		else
 			return addr;
+	}
+
+	uint translateAddr(uint addr) {
+		return toP0Area(addr) % memory.length;
 	}
 
 	uint getPArea(uint addr) {

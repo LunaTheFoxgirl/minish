@@ -32,12 +32,17 @@ protected:
 			The next instruction in the instruction stream.
 	*/
 	final ushort nextInstruction() {
-		ushort op = this.read!ushort(PC);
+		uint addr = PC;
 		if (delaySlot_ != 0) {
-			op = this.read!ushort(delaySlot_);
-			delaySlot_ = 0;
+
+			// NOTE:	Delay slot execution will still increase the program
+			//			counter, work around this by decreasing the PC by 2.
+			addr = delaySlot_;
+			PC -= 2;
 		}
-		return op;
+
+		this.delaySlot_ = 0;
+		return this.read!ushort(addr);
 	}
 
 	/**
@@ -92,6 +97,16 @@ public:
 
 	/// Procedure Register
 	uint PR;
+
+	/**
+		Utility function that gets the stack pointer.
+	*/
+	@property ref int SP() => R[15];
+
+	/**
+		Utility function that gets the frame pointer.
+	*/
+	@property ref int FP() => R[14];
 
 	/// The status register's T bit.
 	@property ubyte T() => getbit!SH_T_BIT(SR);
@@ -219,7 +234,7 @@ public:
 			"  r0=%.8x   r1=%.8x   r2=%.8x   r3=%.8x   r4=%.8x   r5=%.8x   r6=%.8x   r7=%.8x\n" ~
 			"  r8=%.8x   r9=%.8x  r10=%.8x  r11=%.8x  r12=%.8x  r13=%.8x  r14=%.8x  r15=%.8x\n" ~
 			"  pc=%.8x   pr=%.8x   sr=%.8x  gbr=%.8x  vbr=%.8x  dbr=%.8x\n" ~
-			"mach=%.8x macl=%.8x\n"
+			"mach=%.8x macl=%.8x"
 		).format(
 			R[0],  R[1],  R[2],  R[3],  R[4],  R[5],  R[6],  R[7],
 			R[8],  R[9], R[10], R[11], R[12], R[13], R[14], R[15],
@@ -253,5 +268,5 @@ bool getbit(uint offset, T)(ref T src) {
 pragma(inline, true)
 void setbit(uint offset, T)(ref T src, uint value) {
 	enum uint MASK = (1U<<offset);
-	src = (src | ~MASK) | (cast(uint)value << offset);
+	src = (src & ~MASK) | (cast(uint)value << offset);
 }

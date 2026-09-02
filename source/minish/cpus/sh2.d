@@ -777,18 +777,18 @@ __gshared const immutable(SHInst)[] SH2Inst = [
         cpu.delaySlot(tmp+2);
     }),
     OpM4!("BSRF",        "bsrf Rm",                  0b0000000000000011, (SHCPU cpu, int m) {
-        int tmp = cpu.PC;
+        uint tmp = cpu.PC;
         cpu.PR = cpu.PC + 4;
         cpu.PC += 4 + cpu.R[m];
         cpu.delaySlot(tmp+2);
     }),
     OpM4!("JMP",         "jmp @Rm",                  0b0100000000101011, (SHCPU cpu, int m) {
-        int tmp = cpu.PC;
+        uint tmp = cpu.PC;
         cpu.PC = cpu.R[m];
         cpu.delaySlot(tmp+2);
     }),
     OpM4!("JSR",         "jsr @Rm",                  0b0100000000001011, (SHCPU cpu, int m) {
-        int tmp = cpu.PC;
+        uint tmp = cpu.PC;
         cpu.PR = cpu.PC + 4;
         cpu.PC = cpu.R[m];
         cpu.delaySlot(tmp+2);
@@ -931,12 +931,12 @@ __gshared const immutable(SHInst)[] SH2Inst = [
         cpu.PC += 2;
     }),
     OpN4!("STSPR",       "sts pr,Rn",                0b0000000000101010, (SHCPU cpu, int n) {
-        cpu.R[n] = cpu.MACL;
+        cpu.R[n] = cpu.PR;
         cpu.PC += 2;
     }),
     OpN4!("STSMPR",      "sts.l pr,@-Rn",            0b0100000000100010, (SHCPU cpu, int n) {
         cpu.R[n] -= 4;
-        cpu.write!uint(cpu.R[n], cpu.MACL);
+        cpu.write!uint(cpu.R[n], cpu.PR);
         cpu.PC += 2;
     }),
     OpI8!("TRAPA",       "trapa #imm",               0b1100001100000000, (SHCPU cpu, int i) {

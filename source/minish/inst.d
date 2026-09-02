@@ -191,7 +191,7 @@ template OpI8(string name, string asmstr, ushort opcode, void function(SHCPU cpu
         (SHCPU cpu, ISink sink, ushort opcode) {
             import minish.sink : formatSH;
             
-            int i = (opcode & 0xFF);
+            int i = cast(byte)(opcode & 0xFF);
             sink.write(cpu, asmstr.formatSH(SHOperands(
                 imm: i, 
             )));
@@ -229,7 +229,7 @@ template OpD12(string name, string asmstr, ushort opcode, void function(SHCPU cp
     __gshared const immutable(SHInst) __INSTR = SHInst(
         name,
         opcode,
-        0b11111111_00000000u,
+        0b11110000_00000000u,
         (SHCPU cpu, ushort opcode) {
             int d = (opcode & 0xFFF);
             op(cpu, d);
@@ -380,8 +380,6 @@ mixin template GenInstrSelect(SHInst[] inst) {
             sink = The sink to disassemble to.
     */
     override void disassemble(uint addr, ISink sink) {
-        import std.format;
-
         ushort op = this.read!ushort(addr);
         static foreach(CATEGORY; OpcodeCategories) {
             switch(op & CATEGORY) {
